@@ -1,1 +1,616 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Content Decline Prioritisation Using Search Performance and Content Signals</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      line-height: 1.7;
+      color: #1f2933;
+      background: #f7f9fb;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 40px 24px;
+    }
+
+    header {
+      background: #1e3a5f;
+      color: white;
+      padding: 70px 24px;
+    }
+
+    header .container {
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 42px;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #1e3a5f;
+      margin-top: 50px;
+      border-bottom: 2px solid #dbe3ea;
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      color: #294d70;
+      margin-top: 30px;
+    }
+
+    .subtitle {
+      font-size: 19px;
+      max-width: 780px;
+      opacity: 0.95;
+    }
+
+    .meta {
+      margin-top: 25px;
+      font-size: 14px;
+      opacity: 0.85;
+    }
+
+    .card {
+      background: white;
+      padding: 28px;
+      margin: 25px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 25px 0;
+    }
+
+    .result {
+      background: #eef4f8;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .result strong {
+      display: block;
+      font-size: 30px;
+      color: #1e3a5f;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #d9e0e6;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #eef3f7;
+      color: #1e3a5f;
+    }
+
+    code {
+      background: #eef1f4;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    li {
+      margin: 8px 0;
+    }
+
+    a {
+      color: #1e5d91;
+    }
+
+    .callout {
+      border-left: 4px solid #2fa8a0;
+      padding: 18px 22px;
+      background: #f1f8f7;
+      margin: 25px 0;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding: 35px 24px;
+      background: #1e3a5f;
+      color: white;
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      h1 {
+        font-size: 32px;
+      }
+
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="container">
+    <h1>Content Decline Prioritisation Using Search Performance and Content Signals</h1>
+
+    <p class="subtitle">
+      Evaluating whether observable content and search-performance signals
+      can help prioritise pages for human review.
+    </p>
+
+    <p class="meta">
+      FlyRank ML Internship · 2026
+    </p>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="card">
+    <h2>Abstract</h2>
+
+    <p>
+      This study asks whether observable content and search-performance
+      signals can help identify pages that are more likely to be declining
+      and therefore worth human review. Using an anonymized FlyRank ML
+      Internship dataset, we evaluated Logistic Regression, Decision Tree,
+      and Random Forest models using content age, update recency, impressions,
+      average search position, CTR, and word count. Models were evaluated
+      against a Week-4 rule-based baseline using the same client-holdout test
+      set and Precision@50 as the primary ranking metric. Random Forest was
+      the strongest of the tested machine-learning models with a
+      Precision@50 of 0.54, but the simpler Week-4 baseline performed better
+      at 0.58. These results support using model output as directional
+      decision-support for prioritising human review, rather than as proof
+      of future decline or evidence that refreshing content will cause
+      improved performance.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>1. Introduction / Problem Statement</h2>
+
+    <p>
+      Content teams often need to decide which pages should be reviewed
+      first when search performance changes. A practical prioritisation
+      system should identify useful signals without assuming that observed
+      correlations prove causation.
+    </p>
+
+    <p>
+      This study evaluates whether observable content and search-performance
+      signals can help rank pages that are more likely to be declining.
+      The intended decision is therefore <strong>which pages should receive
+      human review first</strong>, rather than whether a page should
+      automatically be refreshed.
+    </p>
+
+    <div class="callout">
+      <strong>Research question:</strong>
+      Can observable content and search-performance signals identify pages
+      that are more likely to be declining and therefore worth review?
+    </div>
+  </section>
+
+
+  <section>
+    <h2>2. Data</h2>
+
+    <div class="card">
+
+      <h3>Dataset</h3>
+
+      <p>
+        The analysis uses the anonymized FlyRank ML Internship
+        content-refresh dataset.
+      </p>
+
+      <ul>
+        <li><strong>Rows:</strong> 30,000</li>
+        <li><strong>Columns:</strong> 44</li>
+        <li><strong>Search-performance window:</strong> 90 days</li>
+        <li>
+          <strong>Trend definition:</strong>
+          comparison of the most recent 30 days with the preceding 30 days
+        </li>
+      </ul>
+
+      <h3>Model Features</h3>
+
+      <ul>
+        <li>Content age</li>
+        <li>Days since last update</li>
+        <li>90-day impressions</li>
+        <li>Average search position</li>
+        <li>Click-through rate (CTR)</li>
+        <li>Word count</li>
+      </ul>
+
+      <h3>Target</h3>
+
+      <p>
+        The target label is derived from <code>trend_direction</code>:
+        pages with a value of <code>down</code> are labelled as declining.
+      </p>
+
+      <h3>Excluded Fields</h3>
+
+      <ul>
+        <li><code>trend_direction</code> — defines the target</li>
+        <li><code>trend_pct</code> — directly encodes the outcome</li>
+        <li><code>content_id</code> — identifier only</li>
+        <li><code>client_id</code> — used only for grouped validation</li>
+      </ul>
+
+      <p>
+        No client names, private queries, URLs, or other identifying
+        information are included.
+      </p>
+
+    </div>
+  </section>
+
+
+  <section>
+    <h2>3. Methodology</h2>
+
+    <h3>Models</h3>
+
+    <p>Three supervised classification approaches were evaluated:</p>
+
+    <ul>
+      <li>
+        <strong>Logistic Regression</strong> — interpretable linear reference
+        model.
+      </li>
+      <li>
+        <strong>Decision Tree</strong> — simple rule-based model.
+      </li>
+      <li>
+        <strong>Random Forest</strong> — captures non-linear relationships
+        and feature interactions.
+      </li>
+    </ul>
+
+    <h3>Baseline</h3>
+
+    <p>
+      The Week-4 rule-based baseline flags a page when:
+    </p>
+
+    <div class="callout">
+      <code>
+        impressions_90d ≥ 500 AND avg_position &gt; 0 AND ctr &lt; 0.5
+      </code>
+    </div>
+
+    <h3>Validation</h3>
+
+    <p>
+      The preferred evaluation uses a client-holdout split. Twenty percent
+      of clients are held out for testing so that pages from the same client
+      do not appear in both training and test data.
+    </p>
+
+    <p>
+      The baseline and all models are evaluated on the same held-out rows.
+      Precision@50 is used as the primary ranking metric because the
+      practical goal is to create a small review queue.
+    </p>
+
+    <h3>Leakage Audit</h3>
+
+    <p>
+      Target-derived fields and identifiers were excluded from predictive
+      features. The validation split was also checked for client overlap.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>4. Results</h2>
+
+    <div class="result-grid">
+
+      <div class="result">
+        <strong>0.58</strong>
+        Week-4 Baseline<br>
+        Precision@50
+      </div>
+
+      <div class="result">
+        <strong>0.54</strong>
+        Random Forest<br>
+        Precision@50
+      </div>
+
+      <div class="result">
+        <strong>-0.04</strong>
+        RF − Baseline<br>
+        Difference
+      </div>
+
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Precision@50</th>
+          <th>ROC-AUC</th>
+          <th>Average Precision</th>
+          <th>Precision</th>
+          <th>Recall</th>
+          <th>F1</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr>
+          <td>Week-4 baseline</td>
+          <td>0.58</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+
+        <tr>
+          <td><strong>Random Forest</strong></td>
+          <td><strong>0.54</strong></td>
+          <td>0.655</td>
+          <td>0.627</td>
+          <td>0.608</td>
+          <td>0.759</td>
+          <td>0.675</td>
+        </tr>
+
+        <tr>
+          <td>Logistic Regression</td>
+          <td>0.44</td>
+          <td>0.551</td>
+          <td>0.550</td>
+          <td>0.556</td>
+          <td>0.825</td>
+          <td>0.664</td>
+        </tr>
+
+        <tr>
+          <td>Decision Tree</td>
+          <td>0.36</td>
+          <td>0.641</td>
+          <td>0.610</td>
+          <td>0.622</td>
+          <td>0.630</td>
+          <td>0.626</td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <div class="callout">
+
+      <strong>Key result:</strong>
+
+      Random Forest was the strongest of the tested ML models, but its
+      Precision@50 of 0.54 was below the Week-4 baseline of 0.58.
+      Therefore, the tested ML models did not outperform the simpler
+      rule-based baseline under this validation design.
+
+    </div>
+
+  </section>
+
+
+  <section>
+    <h2>5. Limitations & Honest Framing</h2>
+
+    <ul>
+      <li>
+        The dataset is an anonymized 30,000-row internship dataset and does
+        not represent the full FlyRank research dataset.
+      </li>
+
+      <li>
+        The decline label describes observed <code>trend_direction</code>;
+        it does not prove future decline.
+      </li>
+
+      <li>
+        The feature set does not capture seasonality, search-intent changes,
+        technical SEO issues, competition changes, or external events.
+      </li>
+
+      <li>
+        Client-holdout validation is more conservative than a simple random
+        row split, but the reported result is still based on one held-out
+        split.
+      </li>
+
+      <li>
+        Random Forest did not outperform the simpler Week-4 baseline.
+      </li>
+
+      <li>
+        A model score does not establish that refreshing a page will cause
+        improved performance.
+      </li>
+    </ul>
+
+    <p>
+      The model should therefore be interpreted as a
+      <strong>directional decision-support tool</strong>, not as an
+      autonomous content-management system.
+    </p>
+  </section>
+
+
+  <section>
+    <h2>6. Ranked Recommendations</h2>
+
+    <p>
+      Model output should be used to prioritise pages for human review.
+      Recommended actions depend on the observable reason signals and
+      additional contextual review.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Signal</th>
+          <th>Recommended Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>Low CTR + stale content</td>
+          <td>
+            Review CTR, search intent, content freshness, title and snippet
+            alignment.
+          </td>
+        </tr>
+
+        <tr>
+          <td>Low CTR</td>
+          <td>
+            Review title, snippet alignment and search intent.
+          </td>
+        </tr>
+
+        <tr>
+          <td>Stale content</td>
+          <td>
+            Review whether information is outdated and whether a refresh is
+            justified.
+          </td>
+        </tr>
+
+        <tr>
+          <td>No strong signal</td>
+          <td>
+            Continue monitoring before taking action.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Human Review Required</h3>
+
+    <p>
+      Before taking action, reviewers should consider search intent,
+      information freshness, technical factors, seasonality, competition,
+      and business context.
+    </p>
+
+    <h3>Actions That Should Not Be Automated</h3>
+
+    <ul>
+      <li>Publishing or deleting content</li>
+      <li>Canonical, redirect, or indexing changes</li>
+      <li>Medical, legal, financial, or brand-safety decisions</li>
+      <li>Bulk rewriting solely because of a model score</li>
+      <li>Treating a refresh recommendation as proof of causal improvement</li>
+    </ul>
+  </section>
+
+
+  <section>
+    <h2>7. Reproducibility</h2>
+
+    <p>
+      The analysis is documented through the project's weekly notebooks,
+      progressing from baseline development through model evaluation,
+      validation auditing, and the final action playbook.
+    </p>
+
+    <ul>
+      <li>
+        <a href="https://github.com/Sakshiiikashyap/flyrank-ml-internship">
+          GitHub Repository
+        </a>
+      </li>
+
+      <li>
+        Week 4 — Rule-based baseline
+      </li>
+
+      <li>
+        Week 5 — Model comparison
+      </li>
+
+      <li>
+        Week 6 — Validation and leakage audit
+      </li>
+
+      <li>
+        Week 7 — Action playbook
+      </li>
+
+      <li>
+        Week 8 — Capstone notebook
+      </li>
+    </ul>
+  </section>
+
+
+  <section>
+    <h2>8. Acknowledgments & Data Credit</h2>
+
+    <p>
+      Built on the FlyRank ML Internship dataset
+      — <a href="https://flyrank.ai">FlyRank</a>.
+    </p>
+
+    <p>
+      This work was completed as part of the FlyRank ML Internship and
+      focuses on responsible, reproducible, decision-support-oriented
+      machine-learning analysis.
+    </p>
+  </section>
+
+</main>
+
+
+<footer>
+  <p>
+    Content Decline Prioritisation · FlyRank ML Internship · 2026
+  </p>
+</footer>
+
+</body>
+</html>
